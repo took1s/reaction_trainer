@@ -1,0 +1,16 @@
+name: reaction_trainer
+description: Reaction training app for athletes
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_tts: ^4.0.0
+  google_fonts: ^6.2.1
+  flutter_vector_icons: ^2.0.0
+
+flutter:
+  uses-material-design: true
