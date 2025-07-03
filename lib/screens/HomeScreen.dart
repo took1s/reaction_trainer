@@ -15,7 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, String>> filteredVoices = [];
   Map<String, String>? selectedVoice;
 
-  List<String> allItems = [
+  final List<String> allItems = [
     'Red',
     'Green',
     'Blue',
@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'Forward',
     'Backward',
   ];
-  List<String> selectedItems = ['Red', 'Green', 'Blue', 'White'];
+  List<String> selectedItems = ['Red', 'Green', 'Blue'];
 
   @override
   void initState() {
@@ -35,16 +35,19 @@ class _HomeScreenState extends State<HomeScreen> {
     loadVoices();
   }
 
+  /// Загружает список доступных голосов
   Future<void> loadVoices() async {
     List<dynamic> voices = await flutterTts.getVoices;
-    List<String> allowed = ['en-US', 'ru-RU', 'de-DE'];
+    List<String> allowedLocales = ['en-US', 'ru-RU', 'de-DE'];
 
     filteredVoices = voices
-        .where((v) => allowed.contains(v['locale']))
-        .map<Map<String, String>>((v) => {
-              'name': v['name'],
-              'locale': v['locale'],
-            })
+        .where((v) => allowedLocales.contains(v['locale']))
+        .map<Map<String, String>>(
+          (v) => {
+            'name': v['name'],
+            'locale': v['locale'],
+          },
+        )
         .toList();
 
     if (filteredVoices.isNotEmpty) {
@@ -58,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
   }
 
+  /// Запускает тренировку
   void startTraining() {
     if (selectedItems.isEmpty || selectedVoice == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,10 +82,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Виджет Dropdown выбора голоса
   Widget buildVoiceDropdown() {
     return DropdownButton<Map<String, String>>(
       value: selectedVoice,
       hint: Text('Выберите голос'),
+      isExpanded: true,
       items: filteredVoices.map((voice) {
         return DropdownMenuItem(
           value: voice,
@@ -101,49 +107,85 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Настройки тренировки')),
+      appBar: AppBar(
+        title: Text('Настройки тренировки'),
+      ),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Интервал между сигналами (сек):'),
-            DropdownButton<int>(
-              value: selectedInterval,
-              items: intervals
-                  .map((sec) => DropdownMenuItem(
-                        value: sec,
-                        child: Text('$sec сек'),
-                      ))
-                  .toList(),
-              onChanged: (value) => setState(() => selectedInterval = value!),
+            /// Карточка выбора интервала
+            Card(
+              child: ListTile(
+                title: Text('Интервал между сигналами'),
+                trailing: DropdownButton<int>(
+                  value: selectedInterval,
+                  items: intervals
+                      .map(
+                        (sec) => DropdownMenuItem(
+                          value: sec,
+                          child: Text('$sec сек'),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) =>
+                      setState(() => selectedInterval = value!),
+                ),
+              ),
             ),
-            SizedBox(height: 20),
-            Text('Выберите элементы для озвучки:'),
-            Wrap(
-              spacing: 10,
-              children: allItems.map((item) {
-                return FilterChip(
-                  label: Text(item),
-                  selected: selectedItems.contains(item),
-                  onSelected: (val) {
-                    setState(() {
-                      val
-                          ? selectedItems.add(item)
-                          : selectedItems.remove(item);
-                    });
-                  },
-                );
-              }).toList(),
+            SizedBox(height: 10),
+
+            /// Карточка выбора элементов
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Выберите элементы для озвучки:'),
+                    Wrap(
+                      spacing: 10,
+                      children: allItems.map((item) {
+                        return FilterChip(
+                          label: Text(item),
+                          selected: selectedItems.contains(item),
+                          onSelected: (val) {
+                            setState(() {
+                              val
+                                  ? selectedItems.add(item)
+                                  : selectedItems.remove(item);
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            SizedBox(height: 20),
-            Text('Язык и голос озвучки:'),
-            buildVoiceDropdown(),
+            SizedBox(height: 10),
+
+            /// Карточка выбора голоса
+            Card(
+              child: ListTile(
+                title: Text('Язык и голос озвучки'),
+                subtitle: buildVoiceDropdown(),
+              ),
+            ),
             Spacer(),
-            ElevatedButton(
-              onPressed: startTraining,
-              child: Text('Начать тренировку'),
-              style: ElevatedButton.styleFrom(minimumSize: Size.fromHeight(50)),
+
+            /// Кнопка запуска тренировки по центру
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: startTraining,
+                icon: Icon(Icons.play_arrow),
+                label: Text('Начать тренировку'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size.fromHeight(50),
+                ),
+              ),
             ),
           ],
         ),

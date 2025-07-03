@@ -1,0 +1,18 @@
+{
+  "selectLanguage": "Выберите язык",
+  "@selectLanguage": {},
+  "appTitle": "Тренажёр реакции",
+  "@appTitle": {},
+  "startTraining": "Начать тренировку",
+  "@startTraining": {},
+  "trainingSettings": "Настройки тренировки",
+  "@trainingSettings": {},
+  "intervalBetweenSignals": "Интервал между сигналами",
+  "@intervalBetweenSignals": {},
+  "selectElements": "Выберите элементы",
+  "@selectElements": {},
+  "voiceAndLanguage": "Голос и язык",
+  "@voiceAndLanguage": {},
+  "finishTraining": "Завершить тренировку",
+  "@finishTraining": {}
+}

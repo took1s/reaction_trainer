@@ -24,7 +24,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final List<int> intervals = [5, 10, 15, 30, 60];
   int selectedInterval = 5;
-  List<String> selectedItems = [
+
+  final FlutterTts flutterTts = FlutterTts();
+  List<Map<String, String>> filteredVoices = [];
+  Map<String, String>? selectedVoice;
+
+  final List<String> allItems = [
     'Red',
     'Green',
     'Blue',
@@ -36,10 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'Forward',
     'Backward',
   ];
-
-  final FlutterTts flutterTts = FlutterTts();
-  List<Map<String, String>> filteredVoices = [];
-  Map<String, String>? selectedVoice;
+  List<String> selectedItems = [];
 
   @override
   void initState() {
@@ -48,11 +50,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> loadVoices() async {
-    List<dynamic> voices = await flutterTts.getVoices;
-    List<String> allowed = ['en-US', 'ru-RU', 'de-DE'];
+    final voices = await flutterTts.getVoices;
+    final allowedLocales = ['en-US', 'ru-RU', 'de-DE'];
+
     filteredVoices = voices
-        .where((v) => allowed.contains(v['locale']))
-        .map<Map<String, String>>((v) => {'name': v['name'], 'locale': v['locale']})
+        .where((v) => allowedLocales.contains(v['locale']))
+        .map<Map<String, String>>(
+          (v) => {'name': v['name'], 'locale': v['locale']},
+        )
         .toList();
 
     if (filteredVoices.isNotEmpty) {
@@ -67,6 +72,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void startTraining() {
+    if (selectedItems.isEmpty || selectedVoice == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select at least one item and a voice')),
+      );
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -82,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget buildVoiceDropdown() {
     return DropdownButton<Map<String, String>>(
       value: selectedVoice,
-      hint: Text('Выберите язык'),
+      hint: Text('Select voice'),
       items: filteredVoices.map((voice) {
         return DropdownMenuItem(
           value: voice,
@@ -108,51 +120,75 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Интервал между сигналами (сек):'),
-            DropdownButton<int>(
-              value: selectedInterval,
-              items: intervals
-                  .map((sec) => DropdownMenuItem(
-                        value: sec,
-                        child: Text('$sec сек'),
-                      ))
-                  .toList(),
-              onChanged: (value) => setState(() => selectedInterval = value!),
+            // Interval
+            Card(
+              child: ListTile(
+                title: Text('Interval between signals'),
+                trailing: DropdownButton<int>(
+                  value: selectedInterval,
+                  items: intervals
+                      .map(
+                        (sec) => DropdownMenuItem(
+                          value: sec,
+                          child: Text('$sec sec'),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) => setState(() => selectedInterval = value!),
+                ),
+              ),
             ),
-            SizedBox(height: 20),
-            Text('Выберите категории (цвета и направления):'),
-            Wrap(
-              spacing: 10,
-              children: [
-                'Red',
-                'Green',
-                'Blue',
-                'White',
-                'Yellow',
-                'Purple',
-                'Left',
-                'Right',
-                'Forward',
-                'Backward',
-              ].map((item) {
-                return FilterChip(
-                  label: Text(item),
-                  selected: selectedItems.contains(item),
-                  onSelected: (val) {
-                    setState(() {
-                      val ? selectedItems.add(item) : selectedItems.remove(item);
-                    });
-                  },
-                );
-              }).toList(),
+            SizedBox(height: 10),
+
+            // Elements
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Select items for voice output:'),
+                    Wrap(
+                      spacing: 10,
+                      children: allItems.map((item) {
+                        return FilterChip(
+                          label: Text(item),
+                          selected: selectedItems.contains(item),
+                          onSelected: (val) {
+                            setState(() {
+                              val
+                                  ? selectedItems.add(item)
+                                  : selectedItems.remove(item);
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            SizedBox(height: 20),
-            Text('Язык озвучки:'),
-            buildVoiceDropdown(),
+            SizedBox(height: 10),
+
+            // Voice selection
+            Card(
+              child: ListTile(
+                title: Text('Voice language'),
+                subtitle: buildVoiceDropdown(),
+              ),
+            ),
             Spacer(),
-            ElevatedButton(
-              onPressed: selectedVoice != null ? startTraining : null,
-              child: Text('Начать тренировку'),
+
+            // Start button centered at bottom
+            Center(
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.play_arrow),
+                label: Text('Start Training'),
+                onPressed: startTraining,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size.fromHeight(50),
+                ),
+              ),
             ),
           ],
         ),
@@ -218,14 +254,15 @@ class _TrainingScreenState extends State<TrainingScreen> {
 
   void startSession() {
     updateItem();
-    timer = Timer.periodic(Duration(seconds: widget.intervalSeconds), (_) {
-      updateItem();
-    });
+    timer = Timer.periodic(
+      Duration(seconds: widget.intervalSeconds),
+      (_) => updateItem(),
+    );
   }
 
   void updateItem() async {
-    final random = Random();
-    final item = widget.items[random.nextInt(widget.items.length)];
+    final rand = Random();
+    final item = widget.items[rand.nextInt(widget.items.length)];
 
     setState(() {
       currentItem = item;
@@ -233,15 +270,14 @@ class _TrainingScreenState extends State<TrainingScreen> {
     });
 
     final locale = widget.voice?['locale'] ?? 'en-US';
-    final langCode = locale.startsWith('ru')
+    final lang = locale.startsWith('ru')
         ? 'ru'
         : locale.startsWith('de')
             ? 'de'
             : 'en';
 
-    final textToSpeak = translations[item]?[langCode] ?? item;
-
-    await flutterTts.speak(textToSpeak);
+    final text = translations[item]?[lang] ?? item;
+    await flutterTts.speak(text);
   }
 
   Color getColorForItem(String item) {
@@ -277,9 +313,13 @@ class _TrainingScreenState extends State<TrainingScreen> {
       body: Stack(
         children: [
           Center(
-            child: Text(
-              countdown > 0 ? countdown.toString() : currentItem,
-              style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+            child: AnimatedOpacity(
+              opacity: countdown > 0 ? 1 : 1,
+              duration: Duration(milliseconds: 500),
+              child: Text(
+                countdown > 0 ? countdown.toString() : currentItem,
+                style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
           Positioned(
@@ -287,11 +327,9 @@ class _TrainingScreenState extends State<TrainingScreen> {
             left: 10,
             child: IconButton(
               icon: Icon(Icons.arrow_back, size: 32, color: Colors.white),
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
             ),
-          )
+          ),
         ],
       ),
     );

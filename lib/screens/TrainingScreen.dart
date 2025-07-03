@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-
 
 class TrainingScreen extends StatefulWidget {
   final int intervalSeconds;
@@ -26,8 +24,8 @@ class _TrainingScreenState extends State<TrainingScreen> {
   String currentItem = '';
   Color backgroundColor = Colors.black;
   int countdown = 3;
+  double opacity = 0;
 
-  // Словарь переводов
   final Map<String, Map<String, String>> translations = {
     'Red': {'en': 'Red', 'ru': 'Красный', 'de': 'Rot'},
     'Green': {'en': 'Green', 'ru': 'Зелёный', 'de': 'Grün'},
@@ -75,6 +73,14 @@ class _TrainingScreenState extends State<TrainingScreen> {
     setState(() {
       currentItem = item;
       backgroundColor = getColorForItem(item);
+      opacity = 0;
+    });
+
+    // Fade in
+    Future.delayed(Duration(milliseconds: 100), () {
+      setState(() {
+        opacity = 1;
+      });
     });
 
     final locale = widget.voice?['locale'] ?? 'en-US';
@@ -118,26 +124,50 @@ class _TrainingScreenState extends State<TrainingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
-      body: Stack(
-        children: [
-          Center(
-            child: Text(
-              countdown > 0 ? countdown.toString() : currentItem,
-              style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+      body: AnimatedContainer(
+        duration: Duration(milliseconds: 500),
+        color: backgroundColor,
+        child: Stack(
+          children: [
+            Center(
+              child: AnimatedOpacity(
+                opacity: opacity,
+                duration: Duration(milliseconds: 500),
+                child: Text(
+                  countdown > 0 ? countdown.toString() : currentItem,
+                  style: TextStyle(
+                    fontSize: 64,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             ),
-          ),
-          Positioned(
-            top: 40,
-            left: 10,
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, size: 32, color: Colors.white),
-              onPressed: () {
-                Navigator.pop(context);
-              },
+            Positioned(
+              top: 40,
+              left: 10,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back, size: 32, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
             ),
-          )
-        ],
+            if (countdown <= 0)
+              Positioned(
+                bottom: 40,
+                left: 20,
+                right: 20,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.stop),
+                  label: Text('Завершить тренировку'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    minimumSize: Size.fromHeight(50),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

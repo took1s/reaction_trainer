@@ -1,0 +1,18 @@
+{
+  "selectLanguage": "Sprache auswählen",
+  "@selectLanguage": {},
+  "appTitle": "Reaktionstrainer",
+  "@appTitle": {},
+  "startTraining": "Training starten",
+  "@startTraining": {},
+  "trainingSettings": "Trainingseinstellungen",
+  "@trainingSettings": {},
+  "intervalBetweenSignals": "Intervall zwischen Signalen",
+  "@intervalBetweenSignals": {},
+  "selectElements": "Elemente auswählen",
+  "@selectElements": {},
+  "voiceAndLanguage": "Stimme und Sprache",
+  "@voiceAndLanguage": {},
+  "finishTraining": "Training beenden",
+  "@finishTraining": {}
+}
