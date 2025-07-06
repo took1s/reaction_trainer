@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'TrainingScreen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,61 +11,99 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<int> intervals = [5, 10, 15, 30, 60];
   int selectedInterval = 5;
 
-  final FlutterTts flutterTts = FlutterTts();
-  List<Map<String, String>> filteredVoices = [];
-  Map<String, String>? selectedVoice;
+  final AudioPlayer audioPlayer = AudioPlayer();
+  String selectedLanguage = 'en'; // По умолчанию английский
+  String selectedVoice = 'eng-voice'; // По умолчанию английский голос
 
-  final List<String> allItems = [
-    'Red',
-    'Green',
-    'Blue',
-    'White',
-    'Yellow',
-    'Purple',
-    'Left',
-    'Right',
-    'Forward',
-    'Backward',
-  ];
+  // Карта элементов с переводами
+  final Map<String, Map<String, String>> allItems = {
+    'Red': {'en': 'Red', 'de': 'Rot', 'ru': 'Красный'},
+    'Green': {'en': 'Green', 'de': 'Grün', 'ru': 'Зелёный'},
+    'Blue': {'en': 'Blue', 'de': 'Blau', 'ru': 'Синий'},
+    'White': {'en': 'White', 'de': 'Weiß', 'ru': 'Белый'},
+    'Yellow': {'en': 'Yellow', 'de': 'Gelb', 'ru': 'Жёлтый'},
+    'Purple': {'en': 'Purple', 'de': 'Lila', 'ru': 'Фиолетовый'},
+    'Left': {'en': 'Left', 'de': 'Links', 'ru': 'Лево'},
+    'Right': {'en': 'Right', 'de': 'Rechts', 'ru': 'Право'},
+    'Forward': {'en': 'Forward', 'de': 'Vorwärts', 'ru': 'Вперёд'},
+    'Backward': {'en': 'Backward', 'de': 'Rückwärts', 'ru': 'Назад'},
+  };
+
+  // Карта путей к аудиофайлам с учетом голоса
+  final Map<String, Map<String, Map<String, String>>> audioMap = {
+    'Red': {
+      'eng-voice': {'en': 'assets/sounds/red.mp3'},
+      'ru-voice': {'ru': 'assets/sounds/Красный.mp3'},
+      'de-voice': {'de': 'assets/sounds/rot.mp3'},
+    },
+    'Green': {
+      'eng-voice': {'en': 'assets/sounds/green.mp3'},
+      'ru-voice': {'ru': 'assets/sounds/Зелёный.mp3'},
+      'de-voice': {'de': 'assets/sounds/grün.mp3'},
+    },
+    'Blue': {
+      'eng-voice': {'en': 'assets/sounds/blue.mp3'},
+      'ru-voice': {'ru': 'assets/sounds/Синий.mp3'},
+      'de-voice': {'de': 'assets/sounds/blau.mp3'},
+    },
+    'White': {
+      'eng-voice': {'en': 'assets/sounds/white.mp3'},
+      'ru-voice': {'ru': 'assets/sounds/Белый.mp3'},
+      'de-voice': {'de': 'assets/sounds/weiß.mp3'},
+    },
+    'Yellow': {
+      'eng-voice': {'en': 'assets/sounds/yellow.mp3'},
+      'ru-voice': {'ru': 'assets/sounds/Жёлтый.mp3'},
+      'de-voice': {'de': 'assets/sounds/gelb.mp3'},
+    },
+    'Purple': {
+      'eng-voice': {'en': 'assets/sounds/purple.mp3'},
+      'ru-voice': {'ru': 'assets/sounds/Фиолетовый.mp3'},
+      'de-voice': {'de': 'assets/sounds/violett.mp3'},
+    },
+    'Left': {
+      'eng-voice': {'en': 'assets/sounds/left.mp3'},
+      'ru-voice': {'ru': 'assets/sounds/Лево.mp3'},
+      'de-voice': {'de': 'assets/sounds/Links.mp3'},
+    },
+    'Right': {
+      'eng-voice': {'en': 'assets/sounds/right.mp3'},
+      'ru-voice': {'ru': 'assets/sounds/Право.mp3'},
+      'de-voice': {'de': 'assets/sounds/Rechts.mp3'},
+    },
+    'Forward': {
+      'eng-voice': {'en': 'assets/sounds/forward.mp3'},
+      'ru-voice': {'ru': 'assets/sounds/Вперёд.mp3'},
+      'de-voice': {'de': 'assets/sounds/Hoch.mp3'},
+    },
+    'Backward': {
+      'eng-voice': {'en': 'assets/sounds/backward.mp3'},
+      'ru-voice': {'ru': 'assets/sounds/Вниз.mp3'},
+      'de-voice': {'de': 'assets/sounds/Runter.mp3'},
+    },
+  };
+
   List<String> selectedItems = ['Red', 'Green', 'Blue'];
 
   @override
   void initState() {
     super.initState();
-    loadVoices();
+    // Синхронизация языка и голоса
+    if (selectedVoice == 'eng-voice') selectedLanguage = 'en';
+    if (selectedVoice == 'ru-voice') selectedLanguage = 'ru';
+    if (selectedVoice == 'de-voice') selectedLanguage = 'de';
   }
 
-  /// Загружает список доступных голосов
-  Future<void> loadVoices() async {
-    List<dynamic> voices = await flutterTts.getVoices;
-    List<String> allowedLocales = ['en-US', 'ru-RU', 'de-DE'];
-
-    filteredVoices = voices
-        .where((v) => allowedLocales.contains(v['locale']))
-        .map<Map<String, String>>(
-          (v) => {
-            'name': v['name'],
-            'locale': v['locale'],
-          },
-        )
-        .toList();
-
-    if (filteredVoices.isNotEmpty) {
-      selectedVoice = filteredVoices.first;
-      await flutterTts.setVoice({
-        'name': selectedVoice!['name']!,
-        'locale': selectedVoice!['locale']!,
-      });
-    }
-
-    setState(() {});
+  @override
+  void dispose() {
+    audioPlayer.dispose();
+    super.dispose();
   }
 
-  /// Запускает тренировку
   void startTraining() {
-    if (selectedItems.isEmpty || selectedVoice == null) {
+    if (selectedItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Выберите хотя бы один элемент и голос')),
+        SnackBar(content: Text('Выберите хотя бы один элемент')),
       );
       return;
     }
@@ -76,30 +114,60 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (_) => TrainingScreen(
           intervalSeconds: selectedInterval,
           items: selectedItems,
-          voice: selectedVoice,
+          audioPlayer: audioPlayer,
+          audioMap: audioMap,
+          selectedLanguage: selectedLanguage,
+          allItemsMap: allItems,
+          selectedVoice: selectedVoice,
         ),
       ),
     );
   }
 
-  /// Виджет Dropdown выбора голоса
-  Widget buildVoiceDropdown() {
-    return DropdownButton<Map<String, String>>(
-      value: selectedVoice,
-      hint: Text('Выберите голос'),
-      isExpanded: true,
-      items: filteredVoices.map((voice) {
+  /// Виджет Dropdown выбора языка
+  Widget buildLanguageDropdown() {
+    return DropdownButton<String>(
+      value: selectedLanguage,
+      hint: Text('Выберите язык'),
+      items: ['en', 'de', 'ru'].map((lang) {
         return DropdownMenuItem(
-          value: voice,
-          child: Text('${voice['locale']} (${voice['name']})'),
+          value: lang,
+          child: Text(lang == 'en' ? 'English' : lang == 'de' ? 'Deutsch' : 'Русский'),
         );
       }).toList(),
-      onChanged: (voice) async {
-        setState(() => selectedVoice = voice);
-        await flutterTts.setVoice({
-          'name': voice!['name']!,
-          'locale': voice['locale']!,
-        });
+      onChanged: (lang) {
+        if (lang != null && mounted) {
+          setState(() {
+            selectedLanguage = lang;
+            selectedItems = selectedItems.where((item) => allItems.containsKey(item)).toList();
+            // Синхронизация голоса с языком
+            selectedVoice = lang == 'en' ? 'eng-voice' : lang == 'de' ? 'de-voice' : 'ru-voice';
+          });
+        }
+      },
+    );
+  }
+
+  /// Виджет Dropdown выбора голоса
+  Widget buildVoiceDropdown() {
+    return DropdownButton<String>(
+      value: selectedVoice,
+      hint: Text('Выберите голос'),
+      items: ['eng-voice', 'ru-voice', 'de-voice'].map((voice) {
+        return DropdownMenuItem(
+          value: voice,
+          child: Text(voice == 'eng-voice' ? 'English Voice' : voice == 'ru-voice' ? 'Russian Voice' : 'German Voice'),
+        );
+      }).toList(),
+      onChanged: (voice) {
+        if (voice != null && mounted) {
+          setState(() {
+            selectedVoice = voice;
+            // Синхронизация языка с голосом
+            selectedLanguage = voice == 'eng-voice' ? 'en' : voice == 'de-voice' ? 'de' : 'ru';
+            selectedItems = selectedItems.where((item) => allItems.containsKey(item)).toList();
+          });
+        }
       },
     );
   }
@@ -115,7 +183,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// Карточка выбора интервала
             Card(
               child: ListTile(
                 title: Text('Интервал между сигналами'),
@@ -129,14 +196,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       )
                       .toList(),
-                  onChanged: (value) =>
-                      setState(() => selectedInterval = value!),
+                  onChanged: (value) => setState(() => selectedInterval = value!),
                 ),
               ),
             ),
             SizedBox(height: 10),
-
-            /// Карточка выбора элементов
             Card(
               child: Padding(
                 padding: EdgeInsets.all(8),
@@ -146,15 +210,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text('Выберите элементы для озвучки:'),
                     Wrap(
                       spacing: 10,
-                      children: allItems.map((item) {
+                      children: allItems.keys.map((item) {
                         return FilterChip(
-                          label: Text(item),
+                          label: Text(allItems[item]![selectedLanguage]!),
                           selected: selectedItems.contains(item),
                           onSelected: (val) {
                             setState(() {
-                              val
-                                  ? selectedItems.add(item)
-                                  : selectedItems.remove(item);
+                              if (val) {
+                                selectedItems.add(item);
+                              } else {
+                                selectedItems.remove(item);
+                              }
                             });
                           },
                         );
@@ -165,17 +231,20 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             SizedBox(height: 10),
-
-            /// Карточка выбора голоса
             Card(
               child: ListTile(
-                title: Text('Язык и голос озвучки'),
+                title: Text('Язык'),
+                subtitle: buildLanguageDropdown(),
+              ),
+            ),
+            SizedBox(height: 10),
+            Card(
+              child: ListTile(
+                title: Text('Голос'),
                 subtitle: buildVoiceDropdown(),
               ),
             ),
             Spacer(),
-
-            /// Кнопка запуска тренировки по центру
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(

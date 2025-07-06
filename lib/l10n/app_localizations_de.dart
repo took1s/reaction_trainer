@@ -31,4 +31,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get finishTraining => 'Training beenden';
+
+  @override
+String get voiceSelection => 'Stimme auswählen';
 }

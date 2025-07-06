@@ -31,4 +31,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finishTraining => 'Finish Training';
+
+  @override
+String get voiceSelection => 'Select Voice';
 }
+
+

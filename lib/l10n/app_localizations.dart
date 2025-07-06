@@ -144,6 +144,9 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Finish Training'**
   String get finishTraining;
+
+
+  String get voiceSelection;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

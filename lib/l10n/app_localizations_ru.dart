@@ -31,4 +31,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get finishTraining => 'Завершить тренировку';
+
+  @override
+String get voiceSelection => 'Выберите голос';
 }
