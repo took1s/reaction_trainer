@@ -13,11 +13,20 @@ dependencies:
   flutter_tts: ^4.2.3
   google_fonts: ^6.2.1
   flutter_vector_icons: ^2.0.0
-  intl: ^0.20.2 # Обновляем до версии 0.20.2
+  intl: ^0.20.2
   audioplayers: ^5.2.0
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   assets:
     - assets/sounds/
+    - assets/icons/app_icon.png
   uses-material-design: true
-  generate: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  min_sdk_android: 21

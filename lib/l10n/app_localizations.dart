@@ -73,16 +73,6 @@ abstract class AppLocalizations {
 
   static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
-  /// A list of this localizations delegate along with the default localizations
-  /// delegates.
-  ///
-  /// Returns a list of localizations delegates containing this delegate along with
-  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
-  /// and GlobalWidgetsLocalizations.delegate.
-  ///
-  /// Additional delegates can be added by appending to this list in
-  /// MaterialApp. This list does not have to be used at all if a custom list
-  /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
@@ -90,63 +80,30 @@ abstract class AppLocalizations {
     GlobalWidgetsLocalizations.delegate,
   ];
 
-  /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('de'),
     Locale('en'),
-    Locale('ru')
+    Locale('ru'),
   ];
 
-  /// No description provided for @selectLanguage.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Language'**
   String get selectLanguage;
-
-  /// No description provided for @appTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Reaction Trainer'**
   String get appTitle;
-
-  /// No description provided for @startTraining.
-  ///
-  /// In en, this message translates to:
-  /// **'Start Training'**
   String get startTraining;
-
-  /// No description provided for @trainingSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Training Settings'**
   String get trainingSettings;
-
-  /// No description provided for @intervalBetweenSignals.
-  ///
-  /// In en, this message translates to:
-  /// **'Interval Between Signals'**
   String get intervalBetweenSignals;
-
-  /// No description provided for @selectElements.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Elements'**
   String get selectElements;
-
-  /// No description provided for @voiceAndLanguage.
-  ///
-  /// In en, this message translates to:
-  /// **'Voice and Language'**
   String get voiceAndLanguage;
-
-  /// No description provided for @finishTraining.
-  ///
-  /// In en, this message translates to:
-  /// **'Finish Training'**
   String get finishTraining;
+  String get noVoicesFound;
+  String get errorLoadingVoices;
+  String get errorSettingVoice;
+  String get errorSpeaking;
 
-
-  String get voiceSelection;
+  // Добавленные ключи
+  String get voiceSelection; // Для выбора голоса
+  String get lightTheme;     // Для светлой темы
+  String get darkTheme;      // Для темной темы
+  String get systemTheme;    // Для системной темы
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

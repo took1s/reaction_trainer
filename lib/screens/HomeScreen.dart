@@ -1,22 +1,119 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import '../l10n/app_localizations.dart';
+import '../settings_screen.dart';
 import 'TrainingScreen.dart';
 
+void main() => runApp(const ReactionTrainerApp());
+
+class ReactionTrainerApp extends StatefulWidget {
+  const ReactionTrainerApp({super.key});
+
+  @override
+  _ReactionTrainerAppState createState() => _ReactionTrainerAppState();
+}
+
+class _ReactionTrainerAppState extends State<ReactionTrainerApp> {
+  Locale _locale = const Locale('en');
+  ThemeMode _themeMode = ThemeMode.system;
+  String? _selectedVoice = 'eng-voice';
+  String _selectedLanguage = 'en';
+  int _selectedInterval = 5;
+
+  void _changeLocale(Locale newLocale) {
+    setState(() {
+      _locale = newLocale;
+      _selectedLanguage = newLocale.languageCode;
+    });
+  }
+
+  void _changeTheme(ThemeMode themeMode) {
+    setState(() {
+      _themeMode = themeMode;
+    });
+  }
+
+  void _updateLanguage(String language) {
+    setState(() {
+      _selectedLanguage = language;
+    });
+  }
+
+  void _updateVoice(String? voice) {
+    setState(() {
+      _selectedVoice = voice;
+    });
+  }
+
+  void _updateInterval(int interval) {
+    setState(() {
+      _selectedInterval = interval;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Reaction Trainer',
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: _themeMode,
+      locale: _locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: HomeScreen(
+        changeLocale: _changeLocale,
+        changeTheme: _changeTheme,
+        selectedLanguage: _selectedLanguage,
+        selectedVoice: _selectedVoice,
+        selectedInterval: _selectedInterval,
+        updateLanguage: _updateLanguage,
+        updateVoice: _updateVoice,
+        updateInterval: _updateInterval,
+        currentThemeMode: _themeMode,
+      ),
+    );
+  }
+}
+
 class HomeScreen extends StatefulWidget {
+  final Function(Locale) changeLocale;
+  final Function(ThemeMode) changeTheme;
+  final String selectedLanguage;
+  final String? selectedVoice;
+  final int selectedInterval;
+  final Function(String) updateLanguage;
+  final Function(String?) updateVoice;
+  final Function(int) updateInterval;
+  final ThemeMode currentThemeMode;
+
+  const HomeScreen({
+    required this.changeLocale,
+    required this.changeTheme,
+    required this.selectedLanguage,
+    required this.selectedVoice,
+    required this.selectedInterval,
+    required this.updateLanguage,
+    required this.updateVoice,
+    required this.updateInterval,
+    required this.currentThemeMode,
+    super.key,
+  });
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<int> intervals = [5, 10, 15, 30, 60];
-  int selectedInterval = 5;
-
   final AudioPlayer audioPlayer = AudioPlayer();
-  String selectedLanguage = 'en'; // По умолчанию английский
-  String selectedVoice = 'eng-voice'; // По умолчанию английский голос
+  final List<String> allItems = [
+    'Red', 'Green', 'Blue', 'White', 'Yellow', 'Purple', 'Left', 'Right', 'Forward', 'Backward',
+  ];
+  List<String> selectedItems = [];
 
-  // Карта элементов с переводами
-  final Map<String, Map<String, String>> allItems = {
+  final Map<String, Map<String, String>> allItemsMap = {
     'Red': {'en': 'Red', 'de': 'Rot', 'ru': 'Красный'},
     'Green': {'en': 'Green', 'de': 'Grün', 'ru': 'Зелёный'},
     'Blue': {'en': 'Blue', 'de': 'Blau', 'ru': 'Синий'},
@@ -29,70 +126,58 @@ class _HomeScreenState extends State<HomeScreen> {
     'Backward': {'en': 'Backward', 'de': 'Rückwärts', 'ru': 'Назад'},
   };
 
-  // Карта путей к аудиофайлам с учетом голоса
   final Map<String, Map<String, Map<String, String>>> audioMap = {
     'Red': {
-      'eng-voice': {'en': 'assets/sounds/red.mp3'},
-      'ru-voice': {'ru': 'assets/sounds/Красный.mp3'},
-      'de-voice': {'de': 'assets/sounds/rot.mp3'},
+      'eng-voice': {'en': 'sounds/red_eng.mp3'},
+      'ru-voice': {'ru': 'sounds/red_ru.mp3'},
+      'de-voice': {'de': 'sounds/red_de.mp3'},
     },
     'Green': {
-      'eng-voice': {'en': 'assets/sounds/green.mp3'},
-      'ru-voice': {'ru': 'assets/sounds/Зелёный.mp3'},
-      'de-voice': {'de': 'assets/sounds/grün.mp3'},
+      'eng-voice': {'en': 'sounds/green_eng.mp3'},
+      'ru-voice': {'ru': 'sounds/green_ru.mp3'},
+      'de-voice': {'de': 'sounds/green_de.mp3'},
     },
     'Blue': {
-      'eng-voice': {'en': 'assets/sounds/blue.mp3'},
-      'ru-voice': {'ru': 'assets/sounds/Синий.mp3'},
-      'de-voice': {'de': 'assets/sounds/blau.mp3'},
+      'eng-voice': {'en': 'sounds/blue_eng.mp3'},
+      'ru-voice': {'ru': 'sounds/blue_ru.mp3'},
+      'de-voice': {'de': 'sounds/blue_de.mp3'},
     },
     'White': {
-      'eng-voice': {'en': 'assets/sounds/white.mp3'},
-      'ru-voice': {'ru': 'assets/sounds/Белый.mp3'},
-      'de-voice': {'de': 'assets/sounds/weiß.mp3'},
+      'eng-voice': {'en': 'sounds/white_eng.mp3'},
+      'ru-voice': {'ru': 'sounds/white_ru.mp3'},
+      'de-voice': {'de': 'sounds/white_de.mp3'},
     },
     'Yellow': {
-      'eng-voice': {'en': 'assets/sounds/yellow.mp3'},
-      'ru-voice': {'ru': 'assets/sounds/Жёлтый.mp3'},
-      'de-voice': {'de': 'assets/sounds/gelb.mp3'},
+      'eng-voice': {'en': 'sounds/yellow_eng.mp3'},
+      'ru-voice': {'ru': 'sounds/yellow_ru.mp3'},
+      'de-voice': {'de': 'sounds/yellow_de.mp3'},
     },
     'Purple': {
-      'eng-voice': {'en': 'assets/sounds/purple.mp3'},
-      'ru-voice': {'ru': 'assets/sounds/Фиолетовый.mp3'},
-      'de-voice': {'de': 'assets/sounds/violett.mp3'},
+      'eng-voice': {'en': 'sounds/purple_eng.mp3'},
+      'ru-voice': {'ru': 'sounds/purple_ru.mp3'},
+      'de-voice': {'de': 'sounds/purple_de.mp3'},
     },
     'Left': {
-      'eng-voice': {'en': 'assets/sounds/left.mp3'},
-      'ru-voice': {'ru': 'assets/sounds/Лево.mp3'},
-      'de-voice': {'de': 'assets/sounds/Links.mp3'},
+      'eng-voice': {'en': 'sounds/left_eng.mp3'},
+      'ru-voice': {'ru': 'sounds/left_ru.mp3'},
+      'de-voice': {'de': 'sounds/left_de.mp3'},
     },
     'Right': {
-      'eng-voice': {'en': 'assets/sounds/right.mp3'},
-      'ru-voice': {'ru': 'assets/sounds/Право.mp3'},
-      'de-voice': {'de': 'assets/sounds/Rechts.mp3'},
+      'eng-voice': {'en': 'sounds/right_eng.mp3'},
+      'ru-voice': {'ru': 'sounds/right_ru.mp3'},
+      'de-voice': {'de': 'sounds/right_de.mp3'},
     },
     'Forward': {
-      'eng-voice': {'en': 'assets/sounds/forward.mp3'},
-      'ru-voice': {'ru': 'assets/sounds/Вперёд.mp3'},
-      'de-voice': {'de': 'assets/sounds/Hoch.mp3'},
+      'eng-voice': {'en': 'sounds/forward_eng.mp3'},
+      'ru-voice': {'ru': 'sounds/forward_ru.mp3'},
+      'de-voice': {'de': 'sounds/forward_de.mp3'},
     },
     'Backward': {
-      'eng-voice': {'en': 'assets/sounds/backward.mp3'},
-      'ru-voice': {'ru': 'assets/sounds/Вниз.mp3'},
-      'de-voice': {'de': 'assets/sounds/Runter.mp3'},
+      'eng-voice': {'en': 'sounds/backward_eng.mp3'},
+      'ru-voice': {'ru': 'sounds/backward_ru.mp3'},
+      'de-voice': {'de': 'sounds/backward_de.mp3'},
     },
   };
-
-  List<String> selectedItems = ['Red', 'Green', 'Blue'];
-
-  @override
-  void initState() {
-    super.initState();
-    // Синхронизация языка и голоса
-    if (selectedVoice == 'eng-voice') selectedLanguage = 'en';
-    if (selectedVoice == 'ru-voice') selectedLanguage = 'ru';
-    if (selectedVoice == 'de-voice') selectedLanguage = 'de';
-  }
 
   @override
   void dispose() {
@@ -101,9 +186,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void startTraining() {
-    if (selectedItems.isEmpty) {
+    if (selectedItems.isEmpty || widget.selectedVoice == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Выберите хотя бы один элемент')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)?.selectElements ??
+              'Выберите хотя бы один элемент и голос'),
+        ),
       );
       return;
     }
@@ -112,63 +200,15 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => TrainingScreen(
-          intervalSeconds: selectedInterval,
+          intervalSeconds: widget.selectedInterval,
           items: selectedItems,
           audioPlayer: audioPlayer,
           audioMap: audioMap,
-          selectedLanguage: selectedLanguage,
-          allItemsMap: allItems,
-          selectedVoice: selectedVoice,
+          selectedLanguage: widget.selectedLanguage,
+          allItemsMap: allItemsMap,
+          selectedVoice: widget.selectedVoice,
         ),
       ),
-    );
-  }
-
-  /// Виджет Dropdown выбора языка
-  Widget buildLanguageDropdown() {
-    return DropdownButton<String>(
-      value: selectedLanguage,
-      hint: Text('Выберите язык'),
-      items: ['en', 'de', 'ru'].map((lang) {
-        return DropdownMenuItem(
-          value: lang,
-          child: Text(lang == 'en' ? 'English' : lang == 'de' ? 'Deutsch' : 'Русский'),
-        );
-      }).toList(),
-      onChanged: (lang) {
-        if (lang != null && mounted) {
-          setState(() {
-            selectedLanguage = lang;
-            selectedItems = selectedItems.where((item) => allItems.containsKey(item)).toList();
-            // Синхронизация голоса с языком
-            selectedVoice = lang == 'en' ? 'eng-voice' : lang == 'de' ? 'de-voice' : 'ru-voice';
-          });
-        }
-      },
-    );
-  }
-
-  /// Виджет Dropdown выбора голоса
-  Widget buildVoiceDropdown() {
-    return DropdownButton<String>(
-      value: selectedVoice,
-      hint: Text('Выберите голос'),
-      items: ['eng-voice', 'ru-voice', 'de-voice'].map((voice) {
-        return DropdownMenuItem(
-          value: voice,
-          child: Text(voice == 'eng-voice' ? 'English Voice' : voice == 'ru-voice' ? 'Russian Voice' : 'German Voice'),
-        );
-      }).toList(),
-      onChanged: (voice) {
-        if (voice != null && mounted) {
-          setState(() {
-            selectedVoice = voice;
-            // Синхронизация языка с голосом
-            selectedLanguage = voice == 'eng-voice' ? 'en' : voice == 'de-voice' ? 'de' : 'ru';
-            selectedItems = selectedItems.where((item) => allItems.containsKey(item)).toList();
-          });
-        }
-      },
     );
   }
 
@@ -176,51 +216,54 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Настройки тренировки'),
+        title: Text(AppLocalizations.of(context)?.appTitle ?? 'Тренажёр реакции'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SettingsScreen(
+                    changeLocale: widget.changeLocale,
+                    changeTheme: widget.changeTheme,
+                    selectedLanguage: widget.selectedLanguage,
+                    updateLanguage: widget.updateLanguage,
+                    selectedVoice: widget.selectedVoice,
+                    updateVoice: widget.updateVoice,
+                    selectedInterval: widget.selectedInterval,
+                    updateInterval: widget.updateInterval,
+                    currentThemeMode: widget.currentThemeMode,
+                  ),
+                ),
+              );
+            },
+            tooltip: AppLocalizations.of(context)?.selectLanguage ?? 'Настройки',
+          ),
+        ],
       ),
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Card(
-              child: ListTile(
-                title: Text('Интервал между сигналами'),
-                trailing: DropdownButton<int>(
-                  value: selectedInterval,
-                  items: intervals
-                      .map(
-                        (sec) => DropdownMenuItem(
-                          value: sec,
-                          child: Text('$sec сек'),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) => setState(() => selectedInterval = value!),
-                ),
-              ),
-            ),
-            SizedBox(height: 10),
-            Card(
               child: Padding(
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Выберите элементы для озвучки:'),
+                    Text(AppLocalizations.of(context)?.selectElements ??
+                        'Выберите элементы для голосового вывода:'),
                     Wrap(
                       spacing: 10,
-                      children: allItems.keys.map((item) {
+                      children: allItems.map((item) {
                         return FilterChip(
-                          label: Text(allItems[item]![selectedLanguage]!),
+                          label: Text(allItemsMap[item]?[widget.selectedLanguage] ?? item),
                           selected: selectedItems.contains(item),
                           onSelected: (val) {
                             setState(() {
-                              if (val) {
-                                selectedItems.add(item);
-                              } else {
-                                selectedItems.remove(item);
-                              }
+                              val ? selectedItems.add(item) : selectedItems.remove(item);
                             });
                           },
                         );
@@ -230,29 +273,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 10),
-            Card(
-              child: ListTile(
-                title: Text('Язык'),
-                subtitle: buildLanguageDropdown(),
-              ),
-            ),
-            SizedBox(height: 10),
-            Card(
-              child: ListTile(
-                title: Text('Голос'),
-                subtitle: buildVoiceDropdown(),
-              ),
-            ),
-            Spacer(),
-            SizedBox(
-              width: double.infinity,
+            const Spacer(),
+            Center(
               child: ElevatedButton.icon(
+                icon: const Icon(Icons.play_arrow),
+                label: Text(AppLocalizations.of(context)?.startTraining ?? 'Начать тренировку'),
                 onPressed: startTraining,
-                icon: Icon(Icons.play_arrow),
-                label: Text('Начать тренировку'),
                 style: ElevatedButton.styleFrom(
-                  minimumSize: Size.fromHeight(50),
+                  minimumSize: const Size.fromHeight(50),
                 ),
               ),
             ),

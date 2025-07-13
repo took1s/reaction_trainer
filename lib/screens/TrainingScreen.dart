@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import '../l10n/app_localizations.dart'; // Добавьте импорт
+import '../l10n/app_localizations.dart';
 
 class TrainingScreen extends StatefulWidget {
   final int intervalSeconds;
@@ -13,7 +13,7 @@ class TrainingScreen extends StatefulWidget {
   final Map<String, Map<String, String>> allItemsMap;
   final String? selectedVoice;
 
-  TrainingScreen({
+  const TrainingScreen({
     required this.intervalSeconds,
     required this.items,
     required this.audioPlayer,
@@ -21,6 +21,7 @@ class TrainingScreen extends StatefulWidget {
     required this.selectedLanguage,
     required this.allItemsMap,
     required this.selectedVoice,
+    super.key,
   });
 
   @override
@@ -31,8 +32,9 @@ class _TrainingScreenState extends State<TrainingScreen> {
   Timer? timer;
   String currentItem = '';
   Color backgroundColor = Colors.black;
-  int countdown = 3;
-  double opacity = 0;
+  int countdown = 3; // Начальный отсчет
+  double opacity = 0.0;
+  bool isCountingDown = true;
 
   @override
   void initState() {
@@ -41,11 +43,17 @@ class _TrainingScreenState extends State<TrainingScreen> {
   }
 
   void startCountdown() {
-    Timer.periodic(const Duration(seconds: 1), (t) {
-      setState(() => countdown--);
-      if (countdown == 0) {
-        t.cancel();
-        startSession();
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          if (countdown > 0) {
+            countdown--;
+          } else {
+            timer.cancel();
+            isCountingDown = false;
+            startSession();
+          }
+        });
       }
     });
   }
@@ -53,26 +61,39 @@ class _TrainingScreenState extends State<TrainingScreen> {
   void startSession() {
     updateItem();
     timer = Timer.periodic(Duration(seconds: widget.intervalSeconds), (_) {
-      updateItem();
+      if (mounted) updateItem();
     });
   }
 
   Future<void> updateItem() async {
+    if (!mounted) return;
     final random = Random();
     final item = widget.items[random.nextInt(widget.items.length)];
 
     setState(() {
       currentItem = item;
       backgroundColor = getColorForItem(item);
-      opacity = 0;
+      opacity = 0.0;
     });
 
     await Future.delayed(const Duration(milliseconds: 500));
-    setState(() => opacity = 1);
+    if (mounted) {
+      setState(() => opacity = 1.0);
+      final voice = widget.selectedVoice ?? 'eng-voice';
+      final language = widget.selectedLanguage;
+      final audioPath = widget.audioMap[item]?[voice]?[language];
 
-    final audioPath = widget.audioMap[item]?[widget.selectedVoice]?[widget.selectedLanguage];
-    if (audioPath != null) {
-      await widget.audioPlayer.play(AssetSource(audioPath));
+      print('Attempting to play: $audioPath'); // Отладка пути
+      if (audioPath != null && audioPath.isNotEmpty) {
+        try {
+          await widget.audioPlayer.play(AssetSource(audioPath));
+          print('Successfully played: $audioPath'); // Успешное воспроизведение
+        } catch (e) {
+          print('Error playing sound: $e'); // Ошибка воспроизведения
+        }
+      } else {
+        print('No audio path found for item: $item, voice: $voice, language: $language');
+      }
     }
   }
 
@@ -105,10 +126,10 @@ class _TrainingScreenState extends State<TrainingScreen> {
           children: [
             Center(
               child: AnimatedOpacity(
-                opacity: opacity,
+                opacity: isCountingDown ? 1.0 : opacity,
                 duration: const Duration(milliseconds: 500),
                 child: Text(
-                  countdown > 0 ? countdown.toString() : widget.allItemsMap[currentItem]?[widget.selectedLanguage] ?? currentItem,
+                  isCountingDown ? countdown.toString() : widget.allItemsMap[currentItem]?[widget.selectedLanguage] ?? currentItem,
                   style: const TextStyle(
                     fontSize: 64,
                     fontWeight: FontWeight.bold,
@@ -125,7 +146,7 @@ class _TrainingScreenState extends State<TrainingScreen> {
                 onPressed: () => Navigator.pop(context),
               ),
             ),
-            if (countdown <= 0)
+            if (!isCountingDown)
               Positioned(
                 bottom: 40,
                 left: 20,
